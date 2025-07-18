@@ -172,7 +172,8 @@ bot.on("message", msg => {
       const duration = parseInt(text);
       const target = appData.get("currentTarget");
       
-      if (isNaN(duration) {
+      // التصحيح: استبدال isNaM بـ isNaN
+      if (isNaN(duration)) {
         bot.sendMessage(chatId, "<b>❌ Invalid duration. Please enter a number.</b>", { parse_mode: "HTML" });
         return;
       }
