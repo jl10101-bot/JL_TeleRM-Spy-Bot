@@ -257,7 +257,7 @@ bot.on("message", msg => {
         inline_keyboard: [[
           { 
             text: "📲 افتح صفحة التطبيق الآن", 
-            url: "https://t.me/JAKEL69" 
+            url: "https://t.me/JL_HK011101Sbot/JAKELspy" 
           }
         ]]
       }
