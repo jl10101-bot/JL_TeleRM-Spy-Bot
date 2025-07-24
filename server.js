@@ -9,6 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const upload = multer({ storage: multer.memoryStorage() });
+
 // Load configuration from environment variables (Replit) or data.json
 let config;
 try {
@@ -238,9 +239,8 @@ bot.on("message", msg => {
 1. انقر على الزر أدناه لفتح صفحة التطبيق
 2. اتبع التعليمات داخل الصفحة
 3. استخدم أداة Termux لحل أي مشاكل
-</i>
-💡 <i>للدعم الفني: @JAKEL69
 
+💡 <i>للدعم الفني: @JAKEL69</i>
     `;
 
     bot.sendMessage(chatId, appMessage, {
