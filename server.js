@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const upload = multer({ storage: multer.memoryStorage() });
-
+const keep_alive = require('./keep_alive.js')
 // Load configuration from environment variables (Replit) or data.json
 let config;
 try {
