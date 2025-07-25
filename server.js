@@ -4,11 +4,31 @@ const { Server } = require("socket.io");
 const telegramBot = require("node-telegram-bot-api");
 const multer = require("multer");
 const fs = require('fs');
+const fetch = require('node-fetch'); // تم إضافة وحدة node-fetch
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const upload = multer({ storage: multer.memoryStorage() });
+
+// إضافة دالة الإبقاء على الخادم نشطاً
+function keepServerAlive() {
+  const url = process.env.REPLIT_URL || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+  
+  setInterval(async () => {
+    try {
+      await fetch(url);
+      console.log('✅ تم إرسال طلب إبقاء الخادم نشطاً: ' + new Date().toLocaleString());
+    } catch (error) {
+      console.error('❌ فشل طلب الإبقاء: ' + error.message);
+    }
+  }, 300000); // كل 5 دقائق
+}
+
+// بدء تشغيل آلية الإبقاء عند التنفيذ
+if (process.env.REPL_ID) {
+  keepServerAlive();
+}
 
 // Load configuration from environment variables (Replit) or data.json
 let config;
